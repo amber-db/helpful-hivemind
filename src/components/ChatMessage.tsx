@@ -2,6 +2,8 @@ import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { Bot, User, Copy, Check } from "lucide-react";
 import { useState, useCallback } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Message } from "@/lib/chat";
 
 function CopyButton({ text, className = "" }: { text: string; className?: string }) {
@@ -32,9 +34,21 @@ function CodeBlock({ children, className }: { children: string; className?: stri
         <span>{language}</span>
         <CopyButton text={children.trimEnd()} />
       </div>
-      <pre className="bg-muted rounded-b-lg rounded-t-none p-4 overflow-x-auto !mt-0 !mb-0">
-        <code className={className}>{children}</code>
-      </pre>
+      <SyntaxHighlighter
+        language={language || "text"}
+        style={oneDark}
+        customStyle={{
+          margin: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          borderBottomLeftRadius: "0.5rem",
+          borderBottomRightRadius: "0.5rem",
+          fontSize: "0.85rem",
+        }}
+        wrapLongLines
+      >
+        {children.trimEnd()}
+      </SyntaxHighlighter>
     </div>
   );
 }
