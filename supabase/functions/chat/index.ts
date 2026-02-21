@@ -30,9 +30,14 @@ You have access to special visual tools. When appropriate, use these to create e
 {"title": "Inspiration", "items": [{"text": "Dream big ✨", "color": "lavender"}, {"text": "Stay curious", "color": "mint"}, {"text": "Be kind 💕", "color": "rose"}, {"text": "Keep growing 🌱", "color": "peach"}]}
 \`\`\`
 
+5. **AI Image** - When the user asks you to generate, draw, create, or make an image/picture/illustration, use \`\`\`image with JSON:
+\`\`\`image
+{"prompt": "A detailed description of the image to generate", "caption": "Optional caption for the image"}
+\`\`\`
+
 Colors available for mood boards: peach, mint, lavender, sky, rose, lemon.
 
-Use these tools proactively when they would enhance the response — for study content use flashcards, for plans use planner, for summaries use notes, and for creative/inspirational content use mood boards. You can mix regular markdown with tool blocks.`;
+Use these tools proactively when they would enhance the response — for study content use flashcards, for plans use planner, for summaries use notes, for creative/inspirational content use mood boards, and for image requests use the image tool. You can mix regular markdown with tool blocks. All tool cards can be exported as PDF by the user.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
