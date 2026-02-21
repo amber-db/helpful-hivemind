@@ -5,7 +5,7 @@ import { useState, useCallback } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Message } from "@/lib/chat";
-import { NoteCard, FlashcardSet, PlannerCard, MoodBoard } from "./ToolCards";
+import { NoteCard, FlashcardSet, PlannerCard, MoodBoard, ImageCard } from "./ToolCards";
 import type { Persona } from "@/lib/personas";
 
 function CopyButton({ text, className = "" }: { text: string; className?: string }) {
@@ -55,8 +55,8 @@ function CodeBlock({ children, className }: { children: string; className?: stri
 
 /* Parse tool blocks from AI output */
 function parseToolBlocks(content: string) {
-  const toolRegex = /```(note|flashcards|planner|moodboard)\n([\s\S]*?)```/g;
-  const parts: Array<{ type: "text" | "note" | "flashcards" | "planner" | "moodboard"; content: string }> = [];
+  const toolRegex = /```(note|flashcards|planner|moodboard|image)\n([\s\S]*?)```/g;
+  const parts: Array<{ type: "text" | "note" | "flashcards" | "planner" | "moodboard" | "image"; content: string }> = [];
   let lastIndex = 0;
   let match;
 
@@ -87,6 +87,8 @@ function renderToolCard(type: string, raw: string) {
         return <PlannerCard title={data.title || "Today's Plan"} tasks={data.tasks || []} />;
       case "moodboard":
         return <MoodBoard title={data.title || "Mood Board"} items={data.items || []} />;
+      case "image":
+        return <ImageCard prompt={data.prompt} caption={data.caption} />;
       default:
         return null;
     }
