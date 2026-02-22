@@ -1,6 +1,8 @@
-import { MessageSquare, Plus, Trash2, PanelLeftClose, PanelLeft } from "lucide-react";
+import { useState } from "react";
+import { MessageSquare, Plus, Trash2, PanelLeftClose, PanelLeft, ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PersonaPicker } from "./PersonaPicker";
+import { ImageGallery } from "./ImageGallery";
 import type { Conversation } from "@/lib/conversations";
 import type { Persona } from "@/lib/personas";
 
@@ -31,6 +33,8 @@ export function ChatSidebar({
   onSelectPersona,
   onPersonasChange,
 }: ChatSidebarProps) {
+  const [galleryOpen, setGalleryOpen] = useState(false);
+
   return (
     <>
       {!isOpen && (
@@ -80,6 +84,17 @@ export function ChatSidebar({
               />
             </div>
 
+            {/* Gallery button */}
+            <div className="px-3 pb-2">
+              <button
+                onClick={() => setGalleryOpen(true)}
+                className="flex items-center gap-1.5 w-full text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-2 py-2 rounded-xl hover:bg-muted/50"
+              >
+                <ImageIcon size={14} />
+                Image Gallery
+              </button>
+            </div>
+
             {/* Conversations */}
             <div className="flex-1 overflow-y-auto py-2 px-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
@@ -121,6 +136,7 @@ export function ChatSidebar({
           </motion.aside>
         )}
       </AnimatePresence>
+      <ImageGallery isOpen={galleryOpen} onClose={() => setGalleryOpen(false)} />
     </>
   );
 }

@@ -25,7 +25,8 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-pro-image-preview",
+          model: "google/gemini-2.5-flash-image",
+          modalities: ["image", "text"],
           messages: [
             {
               role: "user",
@@ -58,12 +59,22 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    
-    // Extract image data from the response
     const choice = data.choices?.[0];
-    const content = choice?.message?.content;
     
-    // Check for inline_data in parts (Gemini image response format)
+    // Check for images array (Lovable AI gateway format)
+    const images = choice?.message?.images;
+    if (images && images.length > 0) {
+      const img = images[0];
+      const url = img.image_url?.url || img.url;
+      if (url) {
+        return new Response(
+          JSON.stringify({ imageUrl: url }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Check for inline_data in parts (Gemini format)
     const parts = choice?.message?.parts;
     if (parts) {
       for (const part of parts) {
@@ -78,9 +89,9 @@ serve(async (req) => {
       }
     }
 
-    // If content contains base64 image data
+    // Check content for base64 or image_url
+    const content = choice?.message?.content;
     if (content && typeof content === "string") {
-      // Check if it's a base64 image
       const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
       if (base64Match) {
         return new Response(
@@ -90,7 +101,6 @@ serve(async (req) => {
       }
     }
     
-    // Check if there's image content in the response structure (OpenAI-compatible format)
     if (Array.isArray(content)) {
       for (const item of content) {
         if (item.type === "image_url") {
@@ -102,9 +112,9 @@ serve(async (req) => {
       }
     }
 
-    // Return the raw response for debugging
+    console.error("No image in response:", JSON.stringify(data).slice(0, 500));
     return new Response(
-      JSON.stringify({ error: "No image generated", raw: data }),
+      JSON.stringify({ error: "No image generated" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
