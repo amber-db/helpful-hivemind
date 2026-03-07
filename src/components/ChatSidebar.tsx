@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Plus, Trash2, PanelLeftClose, PanelLeft, ImageIcon } from "lucide-react";
+import { MessageSquare, Plus, Trash2, PanelLeftClose, PanelLeft, ImageIcon, Search, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PersonaPicker } from "./PersonaPicker";
 import { ImageGallery } from "./ImageGallery";
@@ -18,6 +18,8 @@ interface ChatSidebarProps {
   activePersonaId: string;
   onSelectPersona: (persona: Persona) => void;
   onPersonasChange: () => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
 export function ChatSidebar({
@@ -32,8 +34,17 @@ export function ChatSidebar({
   activePersonaId,
   onSelectPersona,
   onPersonasChange,
+  darkMode,
+  onToggleDarkMode,
 }: ChatSidebarProps) {
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = search.trim()
+    ? conversations.filter((c) =>
+        c.title.toLowerCase().includes(search.toLowerCase())
+      )
+    : conversations;
 
   return (
     <>
@@ -65,13 +76,22 @@ export function ChatSidebar({
                 <Plus size={14} />
                 New chat
               </button>
-              <button
-                onClick={onToggle}
-                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Close sidebar"
-              >
-                <PanelLeftClose size={16} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onToggleDarkMode}
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title={darkMode ? "Light mode" : "Dark mode"}
+                >
+                  {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+                <button
+                  onClick={onToggle}
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Close sidebar"
+                >
+                  <PanelLeftClose size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Persona picker */}
@@ -95,18 +115,32 @@ export function ChatSidebar({
               </button>
             </div>
 
+            {/* Search */}
+            <div className="px-3 pb-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search chats…"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+
             {/* Conversations */}
             <div className="flex-1 overflow-y-auto py-2 px-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
                 Chats
               </p>
-              {conversations.length === 0 ? (
+              {filtered.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center mt-4">
-                  No conversations yet
+                  {search ? "No matches found" : "No conversations yet"}
                 </p>
               ) : (
                 <div className="space-y-0.5">
-                  {conversations.map((conv) => (
+                  {filtered.map((conv) => (
                     <div
                       key={conv.id}
                       onClick={() => onSelect(conv.id)}
