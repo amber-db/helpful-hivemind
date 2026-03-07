@@ -18,6 +18,14 @@ import {
 } from "@/lib/personas";
 import { toast } from "sonner";
 
+function getInitialDarkMode() {
+  try {
+    const saved = localStorage.getItem("nexusai-dark-mode");
+    if (saved !== null) return saved === "true";
+  } catch {}
+  return false;
+}
+
 const Index = () => {
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -26,9 +34,15 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [personas, setPersonas] = useState<Persona[]>(loadPersonas);
   const [activePersonaId, setActivePersonaIdState] = useState(getActivePersonaId);
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const activePersona = personas.find((p) => p.id === activePersonaId) || personas[0];
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("nexusai-dark-mode", String(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -129,6 +143,8 @@ const Index = () => {
         activePersonaId={activePersonaId}
         onSelectPersona={handleSelectPersona}
         onPersonasChange={refreshPersonas}
+        darkMode={darkMode}
+        onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
 
       <div className="flex flex-col flex-1 min-w-0">
