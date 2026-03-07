@@ -35,9 +35,24 @@ You have access to special visual tools. When appropriate, use these to create e
 {"prompt": "A detailed description of the image to generate", "caption": "Optional caption for the image"}
 \`\`\`
 
+6. **Spreadsheet / Excel** - When the user asks to create a spreadsheet, table, Excel sheet, or data in rows/columns, use \`\`\`spreadsheet with JSON. The user can download it as .xlsx:
+\`\`\`spreadsheet
+{"title": "Budget Tracker", "headers": ["Item", "Category", "Amount"], "rows": [["Rent", "Housing", "$1200"], ["Groceries", "Food", "$400"]]}
+\`\`\`
+
+7. **Presentation / PowerPoint** - When the user asks to create a presentation, slideshow, or PowerPoint, use \`\`\`presentation with JSON. The user can download it as .pptx:
+\`\`\`presentation
+{"title": "My Presentation", "slides": [{"heading": "Introduction", "bullets": ["Welcome", "Overview"]}, {"heading": "Key Points", "bullets": ["Point 1", "Point 2"]}]}
+\`\`\`
+
+8. **AI Video** - When the user asks to generate, create, or make a video/animation/clip, use \`\`\`video with JSON:
+\`\`\`video
+{"prompt": "A detailed description of the video to generate", "caption": "Optional caption"}
+\`\`\`
+
 Colors available for mood boards: peach, mint, lavender, sky, rose, lemon.
 
-Use these tools proactively when they would enhance the response — for study content use flashcards, for plans use planner, for summaries use notes, for creative/inspirational content use mood boards, and for image requests use the image tool. You can mix regular markdown with tool blocks. All tool cards can be exported as PDF by the user.`;
+Use these tools proactively when they would enhance the response — for study content use flashcards, for plans use planner, for summaries use notes, for creative/inspirational content use mood boards, for image requests use the image tool, for data/tables use spreadsheet, for slide decks use presentation, and for video requests use the video tool. You can mix regular markdown with tool blocks. All tool cards can be exported/downloaded by the user.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
