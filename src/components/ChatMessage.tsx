@@ -108,12 +108,14 @@ export function ChatMessage({ message, persona }: { message: Message; persona?: 
           ) : (
             <div className="prose-chat">
               {parts?.map((part, i) => {
+                // Use stable key: for tool cards, use type + content hash to prevent remounting during streaming
+                const stableKey = part.type !== "text" ? `${part.type}-${part.content.slice(0, 40)}` : `text-${i}`;
                 if (part.type !== "text") {
-                  return <div key={i}>{renderToolCard(part.type, part.content)}</div>;
+                  return <div key={stableKey}>{renderToolCard(part.type, part.content)}</div>;
                 }
                 return (
                   <ReactMarkdown
-                    key={i}
+                    key={stableKey}
                     components={{
                       code({ className, children, ...props }) {
                         const isBlock = className?.startsWith("language-");

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { StickyNote, BookOpen, Calendar, Heart, RotateCcw, Download, ImageIcon, Loader2, Table, Presentation, Video } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import jsPDF from "jspdf";
 import { saveGeneratedImage } from "@/lib/imageGallery";
 
@@ -495,6 +495,7 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchedRef = useRef(false);
 
   const generate = useCallback(async () => {
     setLoading(true);
@@ -530,7 +531,12 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
     }
   }, [prompt, caption]);
 
-  useEffect(() => { generate(); }, [generate]);
+  useEffect(() => {
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      generate();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDownload = () => {
     if (!imageUrl) return;
