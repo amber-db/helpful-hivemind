@@ -23,7 +23,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Use Gemini to generate a descriptive video script, then use Veo via the AI gateway
+    // Generate a cinematic still image as video generation isn't available
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -33,11 +33,11 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-pro-image-preview",
+          model: "google/gemini-2.5-flash-image",
           messages: [
             {
               role: "user",
-              content: `Generate a short video based on this description: ${prompt}. Create an animated visualization or illustration that represents this concept.`,
+              content: `Generate a cinematic, high-quality image based on this description: ${prompt}. Make it look like a still frame from a movie. Only output the image, no text.`,
             },
           ],
           modalities: ["image", "text"],
@@ -46,58 +46,58 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Video generation error:", response.status, errorText);
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Too many requests. Please try again in a moment." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const t = await response.text();
+      console.error("Video/image gen error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "Video generation is not available yet. Try generating an image instead!" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Generation failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await response.json();
-    
-    // Try to extract image/video from the response
-    const content = data.choices?.[0]?.message?.content;
-    
-    if (typeof content === "string") {
-      // Check for base64 encoded content
-      const base64Match = content.match(/data:(image|video)\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+    const choice = data.choices?.[0];
+
+    // Check for images array (Lovable AI gateway format)
+    const images = choice?.message?.images;
+    if (images && images.length > 0) {
+      const img = images[0];
+      const url = img.image_url?.url || img.url;
+      if (url) {
+        return new Response(
+          JSON.stringify({ imageUrl: url, type: "image" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Check content for base64
+    const content = choice?.message?.content;
+    if (content && typeof content === "string") {
+      const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
       if (base64Match) {
         return new Response(
-          JSON.stringify({ videoUrl: base64Match[0] }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
-      // Check for URL
-      const urlMatch = content.match(/https?:\/\/[^\s"'<>]+\.(mp4|webm|gif|png|jpg)/i);
-      if (urlMatch) {
-        return new Response(
-          JSON.stringify({ videoUrl: urlMatch[0] }),
+          JSON.stringify({ imageUrl: base64Match[0], type: "image" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
 
-    // Check parts array format
-    if (Array.isArray(content)) {
-      for (const part of content) {
-        if (part.type === "image_url" || part.inline_data) {
-          const mimeType = part.inline_data?.mime_type || "image/png";
-          const b64 = part.inline_data?.data;
-          if (b64) {
-            return new Response(
-              JSON.stringify({ videoUrl: `data:${mimeType};base64,${b64}` }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-        }
-      }
-    }
-
+    console.error("No image in response:", JSON.stringify(data).slice(0, 500));
     return new Response(
-      JSON.stringify({ error: "Video generation is not available yet. Try generating an image instead!" }),
-      { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Could not generate visual content" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("generate-video error:", e);
