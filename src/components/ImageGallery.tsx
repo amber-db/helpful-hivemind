@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ImageIcon, Download, Trash2, X } from "lucide-react";
+import { ImageIcon, Download, Trash2, X, Share2, Check } from "lucide-react";
 import { loadDbGalleryImages, deleteDbGalleryImage, type DbGalleryImage } from "@/lib/db";
+import { shareGalleryImage } from "@/lib/sharing";
+import { toast } from "sonner";
 
 export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [images, setImages] = useState<DbGalleryImage[]>([]);
@@ -84,6 +86,21 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                     className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <Download size={13} /> Download
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = await shareGalleryImage(selected.id);
+                        const url = `${window.location.origin}/shared/${token}`;
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Share link copied to clipboard!");
+                      } catch {
+                        toast.error("Failed to create share link");
+                      }
+                    }}
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <Share2 size={13} /> Share
                   </button>
                   <button
                     onClick={() => handleDelete(selected.id)}
