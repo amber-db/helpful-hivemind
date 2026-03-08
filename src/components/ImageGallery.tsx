@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ImageIcon, Download, Trash2, X } from "lucide-react";
+import { ImageIcon, Download, Trash2, X, Share2, Check } from "lucide-react";
 import { loadDbGalleryImages, deleteDbGalleryImage, type DbGalleryImage } from "@/lib/db";
+import { shareGalleryImage } from "@/lib/sharing";
+import { toast } from "sonner";
 
 export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [images, setImages] = useState<DbGalleryImage[]>([]);
