@@ -63,7 +63,7 @@ function exportConversationPdf(messages: Message[], personaName: string) {
     }
 
     // Name label
-    doc.setFillColor(isUser ? 200, 220, 240 : 245, 200, 175);
+    if (isUser) { doc.setFillColor(200, 220, 240); } else { doc.setFillColor(245, 200, 175); }
     doc.roundedRect(margin, y, maxW, blockH, 3, 3, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
