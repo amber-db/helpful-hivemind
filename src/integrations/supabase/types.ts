@@ -133,6 +133,38 @@ export type Database = {
           },
         ]
       }
+      shared_images: {
+        Row: {
+          created_at: string
+          gallery_image_id: string
+          id: string
+          share_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gallery_image_id: string
+          id?: string
+          share_token?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gallery_image_id?: string
+          id?: string
+          share_token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_images_gallery_image_id_fkey"
+            columns: ["gallery_image_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
