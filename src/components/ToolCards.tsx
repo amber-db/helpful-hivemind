@@ -290,7 +290,7 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
       if (data.imageUrl) {
         if (imageUrl) setHistory((prev) => [...prev, imageUrl]);
         setImageUrl(data.imageUrl);
-        saveGeneratedImage({ prompt: editInstruction || prompt, caption, imageUrl: data.imageUrl });
+        saveDbGalleryImage({ prompt: editInstruction || prompt, caption, imageUrl: data.imageUrl });
       } else {
         throw new Error("No image returned");
       }
