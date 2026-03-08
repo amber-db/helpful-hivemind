@@ -515,7 +515,11 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
       const data = await resp.json();
       if (data.imageUrl) {
         setImageUrl(data.imageUrl);
-        saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
+        try {
+          saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
+        } catch (galleryError) {
+          console.warn("Could not save generated scene to gallery:", galleryError);
+        }
       } else {
         throw new Error("No visual content returned");
       }
