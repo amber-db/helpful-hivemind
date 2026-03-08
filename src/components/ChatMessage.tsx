@@ -113,9 +113,8 @@ export function ChatMessage({ message, persona }: { message: Message; persona?: 
                 if (part.type !== "text") {
                   return <div key={stableKey}>{renderToolCard(part.type, part.content)}</div>;
                 }
-                return (
                   <ReactMarkdown
-                    key={i}
+                    key={stableKey}
                     components={{
                       code({ className, children, ...props }) {
                         const isBlock = className?.startsWith("language-");
