@@ -88,6 +88,21 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                     <Download size={13} /> Download
                   </button>
                   <button
+                    onClick={async () => {
+                      try {
+                        const token = await shareGalleryImage(selected.id);
+                        const url = `${window.location.origin}/shared/${token}`;
+                        await navigator.clipboard.writeText(url);
+                        toast.success("Share link copied to clipboard!");
+                      } catch {
+                        toast.error("Failed to create share link");
+                      }
+                    }}
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    <Share2 size={13} /> Share
+                  </button>
+                  <button
                     onClick={() => handleDelete(selected.id)}
                     className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
                   >

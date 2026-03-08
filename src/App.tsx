@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/shared/:token" element={<SharedImage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
