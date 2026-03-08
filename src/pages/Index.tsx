@@ -220,6 +220,16 @@ const Index = () => {
               {activePersona?.description}
             </span>
           </div>
+          {messages.length > 0 && (
+            <button
+              onClick={() => exportConversationPdf(messages, activePersona?.name || "Nexus")}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title="Export conversation as PDF"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Export PDF</span>
+            </button>
+          )}
         </header>
 
         {/* Messages */}
