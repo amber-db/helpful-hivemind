@@ -4,7 +4,12 @@ import { ImageIcon, Download, Trash2, X } from "lucide-react";
 import { loadGalleryImages, deleteGalleryImage, type GalleryImage } from "@/lib/imageGallery";
 
 export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [images, setImages] = useState<GalleryImage[]>(loadGalleryImages);
+  const [images, setImages] = useState<GalleryImage[]>([]);
+
+  // Refresh images whenever the gallery is opened
+  useEffect(() => {
+    if (isOpen) setImages(loadGalleryImages());
+  }, [isOpen]);
   const [selected, setSelected] = useState<GalleryImage | null>(null);
 
   const refresh = () => setImages(loadGalleryImages());
