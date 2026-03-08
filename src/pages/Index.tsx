@@ -17,6 +17,8 @@ import {
   type Persona,
 } from "@/lib/personas";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
+import jsPDF from "jspdf";
 
 function getInitialDarkMode() {
   try {
@@ -24,6 +26,66 @@ function getInitialDarkMode() {
     if (saved !== null) return saved === "true";
   } catch {}
   return false;
+}
+
+function exportConversationPdf(messages: Message[], personaName: string) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageW = 210;
+  const margin = 20;
+  const maxW = pageW - margin * 2;
+
+  // Header band
+  doc.setFillColor(166, 217, 200);
+  doc.rect(0, 0, pageW, 38, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Conversation Export", margin, 22);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text(new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), margin, 32);
+
+  let y = 48;
+
+  messages.forEach((msg) => {
+    const isUser = msg.role === "user";
+    const name = isUser ? "You" : personaName;
+    // Strip tool blocks for PDF
+    const text = msg.content.replace(/```(?:note|flashcards|planner|moodboard|image|spreadsheet|presentation|video)\n[\s\S]*?```/g, "[visual content]");
+
+    // Check page break
+    const lines = doc.splitTextToSize(text, maxW - 10);
+    const blockH = 8 + lines.length * 5 + 6;
+    if (y + blockH > 275) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Name label
+    if (isUser) { doc.setFillColor(200, 220, 240); } else { doc.setFillColor(245, 200, 175); }
+    doc.roundedRect(margin, y, maxW, blockH, 3, 3, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(name, margin + 5, y + 6);
+
+    // Message text
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+    doc.text(lines, margin + 5, y + 13);
+
+    y += blockH + 4;
+  });
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 160);
+  doc.text("Exported from NexusAI ✨", margin, 287);
+
+  const title = messages.find(m => m.role === "user")?.content.slice(0, 30) || "conversation";
+  doc.save(`${title.replace(/\s+/g, "_").toLowerCase()}_export.pdf`);
 }
 
 const Index = () => {
@@ -158,6 +220,16 @@ const Index = () => {
               {activePersona?.description}
             </span>
           </div>
+          {messages.length > 0 && (
+            <button
+              onClick={() => exportConversationPdf(messages, activePersona?.name || "Nexus")}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title="Export conversation as PDF"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Export PDF</span>
+            </button>
+          )}
         </header>
 
         {/* Messages */}
