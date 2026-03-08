@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import SharedImage from "./pages/SharedImage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
