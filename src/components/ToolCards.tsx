@@ -255,22 +255,31 @@ export function MoodBoard({ title, items }: { title: string; items: { text: stri
   );
 }
 
-/* ── AI Image Card ── */
+/* ── AI Image Card with Edit/Regenerate ── */
 export function ImageCard({ prompt, caption }: { prompt: string; caption?: string }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editPrompt, setEditPrompt] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
 
-  const generateImage = useCallback(async () => {
+  const generateImage = useCallback(async (editInstruction?: string, sourceImage?: string) => {
     setLoading(true);
     setError(null);
     try {
+      const isEdit = editInstruction && sourceImage;
+      const endpoint = isEdit ? "edit-image" : "generate-image";
+      const body = isEdit
+        ? { prompt: editInstruction, imageUrl: sourceImage }
+        : { prompt };
+
       const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify(body),
         }
       );
       if (!resp.ok) {
@@ -279,8 +288,9 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
       }
       const data = await resp.json();
       if (data.imageUrl) {
+        if (imageUrl) setHistory((prev) => [...prev, imageUrl]);
         setImageUrl(data.imageUrl);
-        saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
+        saveGeneratedImage({ prompt: editInstruction || prompt, caption, imageUrl: data.imageUrl });
       } else {
         throw new Error("No image returned");
       }
@@ -288,10 +298,12 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
       setError(e instanceof Error ? e.message : "Failed to generate image");
     } finally {
       setLoading(false);
+      setEditPrompt("");
+      setIsEditing(false);
     }
-  }, [prompt, caption]);
+  }, [prompt, caption, imageUrl]);
 
-  useEffect(() => { generateImage(); }, [generateImage]);
+  useEffect(() => { generateImage(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDownload = () => {
     if (!imageUrl) return;
@@ -301,6 +313,18 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
     link.click();
   };
 
+  const handleEdit = () => {
+    if (!editPrompt.trim() || !imageUrl) return;
+    generateImage(editPrompt.trim(), imageUrl);
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setImageUrl(prev);
+  };
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="tool-card tool-card-video my-3">
       <div className="flex items-center justify-between mb-3">
@@ -308,29 +332,61 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
           <ImageIcon size={18} className="text-sky-foreground" />
           <h3 className="font-bold text-base">Generated Image</h3>
         </div>
-        {imageUrl && (
-          <button onClick={handleDownload} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-background/60 hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
-            <Download size={13} /><span>Save</span>
-          </button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {history.length > 0 && !loading && (
+            <button onClick={handleUndo} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-background/60 hover:bg-background text-muted-foreground hover:text-foreground transition-colors" title="Undo edit">
+              <RotateCcw size={13} />
+            </button>
+          )}
+          {imageUrl && !loading && (
+            <button onClick={() => generateImage()} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg bg-background/60 hover:bg-background text-muted-foreground hover:text-foreground transition-colors" title="Regenerate">
+              🔄
+            </button>
+          )}
+          {imageUrl && (
+            <button onClick={handleDownload} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-background/60 hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
+              <Download size={13} /><span>Save</span>
+            </button>
+          )}
+        </div>
       </div>
       <div className="rounded-xl overflow-hidden bg-background/40 min-h-[200px] flex items-center justify-center">
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground">
             <Loader2 size={28} className="animate-spin text-primary" />
-            <p className="text-sm">Generating image…</p>
-            <p className="text-xs max-w-[300px] text-center opacity-60">{prompt}</p>
+            <p className="text-sm">{isEditing ? "Editing image…" : "Generating image…"}</p>
+            <p className="text-xs max-w-[300px] text-center opacity-60">{isEditing ? editPrompt || prompt : prompt}</p>
           </div>
         )}
         {error && (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <p className="text-sm">😔 {error}</p>
-            <button onClick={generateImage} className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Try Again</button>
+            <button onClick={() => generateImage()} className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Try Again</button>
           </div>
         )}
         {imageUrl && !loading && <img src={imageUrl} alt={caption || prompt} className="w-full rounded-xl" />}
       </div>
       {caption && !loading && <p className="text-sm text-muted-foreground mt-2 text-center italic">{caption}</p>}
+      {/* Edit prompt input */}
+      {imageUrl && !loading && !error && (
+        <div className="mt-3 flex gap-2">
+          <input
+            type="text"
+            value={editPrompt}
+            onChange={(e) => setEditPrompt(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleEdit(); }}
+            placeholder="Edit this image… (e.g. 'make it nighttime')"
+            className="flex-1 text-sm px-3 py-2 rounded-xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+          />
+          <button
+            onClick={handleEdit}
+            disabled={!editPrompt.trim()}
+            className="text-xs px-3 py-2 rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 transition-opacity font-medium"
+          >
+            Edit ✨
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }
