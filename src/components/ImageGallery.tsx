@@ -1,28 +1,33 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageIcon, Download, Trash2, X } from "lucide-react";
-import { loadGalleryImages, deleteGalleryImage, type GalleryImage } from "@/lib/imageGallery";
+import { loadDbGalleryImages, deleteDbGalleryImage, type DbGalleryImage } from "@/lib/db";
 
 export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [images, setImages] = useState<DbGalleryImage[]>([]);
+  const [selected, setSelected] = useState<DbGalleryImage | null>(null);
 
-  // Refresh images whenever the gallery is opened
   useEffect(() => {
-    if (isOpen) setImages(loadGalleryImages());
+    if (isOpen) {
+      loadDbGalleryImages().then(setImages).catch(console.error);
+    }
   }, [isOpen]);
-  const [selected, setSelected] = useState<GalleryImage | null>(null);
 
-  const refresh = () => setImages(loadGalleryImages());
+  const refresh = () => { loadDbGalleryImages().then(setImages).catch(console.error); };
 
-  const handleDelete = (id: string) => {
-    deleteGalleryImage(id);
-    refresh();
-    if (selected?.id === id) setSelected(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDbGalleryImage(id);
+      refresh();
+      if (selected?.id === id) setSelected(null);
+    } catch (e) {
+      console.error("Failed to delete", e);
+    }
   };
 
-  const handleDownload = (img: GalleryImage) => {
+  const handleDownload = (img: DbGalleryImage) => {
     const link = document.createElement("a");
-    link.href = img.imageUrl;
+    link.href = img.image_url;
     link.download = `${(img.caption || img.prompt).slice(0, 30).replace(/\s+/g, "_")}.png`;
     link.click();
   };
@@ -45,7 +50,6 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
           className="bg-background rounded-2xl shadow-xl border border-border max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
               <ImageIcon size={18} className="text-primary" />
@@ -57,7 +61,6 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
             </button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto p-5">
             {images.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -66,22 +69,14 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                 <p className="text-xs mt-1">Ask the AI to generate an image to get started!</p>
               </div>
             ) : selected ? (
-              /* Detail view */
               <div>
-                <button
-                  onClick={() => setSelected(null)}
-                  className="text-xs text-primary hover:underline mb-3 inline-block"
-                >
+                <button onClick={() => setSelected(null)} className="text-xs text-primary hover:underline mb-3 inline-block">
                   ← Back to gallery
                 </button>
-                <img
-                  src={selected.imageUrl}
-                  alt={selected.caption || selected.prompt}
-                  className="w-full rounded-xl mb-3"
-                />
+                <img src={selected.image_url} alt={selected.caption || selected.prompt} className="w-full rounded-xl mb-3" />
                 <p className="text-sm font-medium">{selected.caption || selected.prompt}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(selected.createdAt).toLocaleString()}
+                  {new Date(selected.created_at).toLocaleString()}
                 </p>
                 <div className="flex gap-2 mt-3">
                   <button
@@ -99,7 +94,6 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                 </div>
               </div>
             ) : (
-              /* Grid view */
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {images.map((img) => (
                   <motion.div
@@ -108,15 +102,9 @@ export function ImageGallery({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                     className="group relative cursor-pointer rounded-xl overflow-hidden border border-border bg-card"
                     onClick={() => setSelected(img)}
                   >
-                    <img
-                      src={img.imageUrl}
-                      alt={img.caption || img.prompt}
-                      className="w-full aspect-square object-cover"
-                    />
+                    <img src={img.image_url} alt={img.caption || img.prompt} className="w-full aspect-square object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                      <p className="text-background text-xs line-clamp-2 font-medium">
-                        {img.caption || img.prompt}
-                      </p>
+                      <p className="text-background text-xs line-clamp-2 font-medium">{img.caption || img.prompt}</p>
                     </div>
                   </motion.div>
                 ))}

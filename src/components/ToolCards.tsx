@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { StickyNote, BookOpen, Calendar, Heart, RotateCcw, Download, ImageIcon, Loader2, Table, Presentation, Video } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import jsPDF from "jspdf";
-import { saveGeneratedImage } from "@/lib/imageGallery";
+import { saveDbGalleryImage } from "@/lib/db";
 
 /* ── Pastel color values for PDF ── */
 const PDF_COLORS = {
@@ -290,7 +290,7 @@ export function ImageCard({ prompt, caption }: { prompt: string; caption?: strin
       if (data.imageUrl) {
         if (imageUrl) setHistory((prev) => [...prev, imageUrl]);
         setImageUrl(data.imageUrl);
-        saveGeneratedImage({ prompt: editInstruction || prompt, caption, imageUrl: data.imageUrl });
+        saveDbGalleryImage({ prompt: editInstruction || prompt, caption, imageUrl: data.imageUrl });
       } else {
         throw new Error("No image returned");
       }
@@ -517,7 +517,7 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
       if (data.imageUrl) {
         setImageUrl(data.imageUrl);
         try {
-          saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
+          saveDbGalleryImage({ prompt, caption, imageUrl: data.imageUrl });
         } catch (galleryError) {
           console.warn("Could not save generated scene to gallery:", galleryError);
         }
