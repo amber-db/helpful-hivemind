@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { StickyNote, BookOpen, Calendar, Heart, RotateCcw, Download, ImageIcon, Loader2, Table, Presentation, Video } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import jsPDF from "jspdf";
 import { saveGeneratedImage } from "@/lib/imageGallery";
 
