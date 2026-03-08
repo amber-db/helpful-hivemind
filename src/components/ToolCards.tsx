@@ -434,13 +434,13 @@ export function PresentationCard({ title, slides }: { title: string; slides: { h
   );
 }
 
-/* ── Video Card ── */
+/* ── Video Card (generates cinematic still image as fallback) ── */
 export function VideoCard({ prompt, caption }: { prompt: string; caption?: string }) {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const generateVideo = useCallback(async () => {
+  const generate = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -454,28 +454,29 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
       );
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({ error: "Failed" }));
-        throw new Error(data.error || "Video generation failed");
+        throw new Error(data.error || "Generation failed");
       }
       const data = await resp.json();
-      if (data.videoUrl) {
-        setVideoUrl(data.videoUrl);
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+        saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
       } else {
-        throw new Error("No video returned");
+        throw new Error("No visual content returned");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to generate video");
+      setError(e instanceof Error ? e.message : "Failed to generate");
     } finally {
       setLoading(false);
     }
-  }, [prompt]);
+  }, [prompt, caption]);
 
-  useEffect(() => { generateVideo(); }, [generateVideo]);
+  useEffect(() => { generate(); }, [generate]);
 
   const handleDownload = () => {
-    if (!videoUrl) return;
+    if (!imageUrl) return;
     const link = document.createElement("a");
-    link.href = videoUrl;
-    link.download = `${(caption || prompt).slice(0, 30).replace(/\s+/g, "_")}.mp4`;
+    link.href = imageUrl;
+    link.download = `${(caption || prompt).slice(0, 30).replace(/\s+/g, "_")}.png`;
     link.click();
   };
 
@@ -484,9 +485,9 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Video size={18} className="text-sky-foreground" />
-          <h3 className="font-bold text-base">Generated Video</h3>
+          <h3 className="font-bold text-base">Generated Video Scene</h3>
         </div>
-        {videoUrl && (
+        {imageUrl && (
           <button onClick={handleDownload} className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-background/60 hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
             <Download size={13} /><span>Save</span>
           </button>
@@ -496,19 +497,17 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
         {loading && (
           <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground">
             <Loader2 size={28} className="animate-spin text-primary" />
-            <p className="text-sm">Generating video… this may take a minute</p>
+            <p className="text-sm">Generating cinematic scene…</p>
             <p className="text-xs max-w-[300px] text-center opacity-60">{prompt}</p>
           </div>
         )}
         {error && (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <p className="text-sm">😔 {error}</p>
-            <button onClick={generateVideo} className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Try Again</button>
+            <button onClick={generate} className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Try Again</button>
           </div>
         )}
-        {videoUrl && !loading && (
-          <video src={videoUrl} controls className="w-full rounded-xl" />
-        )}
+        {imageUrl && !loading && <img src={imageUrl} alt={caption || prompt} className="w-full rounded-xl" />}
       </div>
       {caption && !loading && <p className="text-sm text-muted-foreground mt-2 text-center italic">{caption}</p>}
     </motion.div>

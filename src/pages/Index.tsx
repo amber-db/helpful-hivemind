@@ -17,6 +17,8 @@ import {
   type Persona,
 } from "@/lib/personas";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
+import jsPDF from "jspdf";
 
 function getInitialDarkMode() {
   try {
