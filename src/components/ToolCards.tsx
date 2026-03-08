@@ -517,7 +517,7 @@ export function VideoCard({ prompt, caption }: { prompt: string; caption?: strin
       if (data.imageUrl) {
         setImageUrl(data.imageUrl);
         try {
-          saveGeneratedImage({ prompt, caption, imageUrl: data.imageUrl });
+          saveDbGalleryImage({ prompt, caption, imageUrl: data.imageUrl });
         } catch (galleryError) {
           console.warn("Could not save generated scene to gallery:", galleryError);
         }
