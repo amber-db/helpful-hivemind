@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import {
-  loadPersonas,
-  saveCustomPersona,
-  deleteCustomPersona,
+  saveDbCustomPersona,
+  deleteDbCustomPersona,
+} from "@/lib/db";
+import {
   DEFAULT_PERSONAS,
   PERSONA_COLORS,
   type Persona,
@@ -28,27 +29,35 @@ export function PersonaPicker({ personas, activeId, onSelect, onPersonasChange }
   const [systemPrompt, setSystemPrompt] = useState("");
   const [color, setColor] = useState("mint");
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim() || !systemPrompt.trim()) return;
-    saveCustomPersona({
-      name: name.trim(),
-      emoji,
-      description: description.trim() || `Custom ${name} persona`,
-      systemPrompt: systemPrompt.trim(),
-      color,
-    });
-    setName("");
-    setEmoji("✨");
-    setDescription("");
-    setSystemPrompt("");
-    setColor("mint");
-    setShowBuilder(false);
-    onPersonasChange();
+    try {
+      await saveDbCustomPersona({
+        name: name.trim(),
+        emoji,
+        description: description.trim() || `Custom ${name} persona`,
+        systemPrompt: systemPrompt.trim(),
+        color,
+      });
+      setName("");
+      setEmoji("✨");
+      setDescription("");
+      setSystemPrompt("");
+      setColor("mint");
+      setShowBuilder(false);
+      onPersonasChange();
+    } catch (e) {
+      console.error("Failed to create persona", e);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteCustomPersona(id);
-    onPersonasChange();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDbCustomPersona(id);
+      onPersonasChange();
+    } catch (e) {
+      console.error("Failed to delete persona", e);
+    }
   };
 
   const isDefault = (id: string) => DEFAULT_PERSONAS.some((p) => p.id === id);

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { StickyNote, BookOpen, Calendar, Heart, RotateCcw, Download, ImageIcon, Loader2, Table, Presentation, Video } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import jsPDF from "jspdf";
-import { saveGeneratedImage } from "@/lib/imageGallery";
+import { saveDbGalleryImage } from "@/lib/db";
 
 /* ── Pastel color values for PDF ── */
 const PDF_COLORS = {
