@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageIcon, Download, Trash2, X } from "lucide-react";
 import { loadGalleryImages, deleteGalleryImage, type GalleryImage } from "@/lib/imageGallery";
